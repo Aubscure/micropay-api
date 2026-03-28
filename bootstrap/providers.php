@@ -2,5 +2,6 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    App\Providers\EventServiceProvider::class, // ← add this line
+    App\Providers\EventServiceProvider::class,
+    App\Providers\FortifyServiceProvider::class,
 ];
