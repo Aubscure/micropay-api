@@ -109,4 +109,17 @@ class TransactionService
 
         return ['created' => $created, 'skipped' => $skipped];
     }
+
+    public function getMerchantTransactions(string $merchantId, int $perPage = 20)
+    {
+        // Paginate keeps responses small — critical for low-bandwidth devices
+        return Transaction::with('fraudFlags')
+            ->where('merchant_id', $merchantId)
+            ->latest()
+            ->paginate($perPage);
+    }
+    public function findTransaction(string $id): ?Transaction
+    {
+        return $this->transactions->findById($id);
+    }
 }

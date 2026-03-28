@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Merchant;
 
 
 #[Fillable(['name', 'email', 'password', 'current_team_id'])]
@@ -34,4 +35,10 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    public function merchant(): \Illuminate\Database\Eloquent\Relations\HasOne
+{
+    // A user has one merchant profile
+    return $this->hasOne(Merchant::class);
+}
 }

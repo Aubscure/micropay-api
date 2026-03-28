@@ -90,4 +90,20 @@ class TransactionController extends Controller
             'data'    => $result,
         ]);
     }
+
+    public function show(Request $request, string $id): JsonResponse
+    {
+        $transaction = $this->transactionService->findTransaction($id);
+
+        if (!$transaction) {
+            return response()->json(['message' => 'Transaction not found.'], 404);
+        }
+
+        // Ensure the requesting user owns the merchant who received this transaction
+        if ($transaction->merchant->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        return response()->json(['data' => new TransactionResource($transaction)]);
+    }
 }
