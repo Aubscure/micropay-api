@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
+
 #[Fillable(['team_id', 'user_id', 'role'])]
 class Membership extends Pivot
 {
