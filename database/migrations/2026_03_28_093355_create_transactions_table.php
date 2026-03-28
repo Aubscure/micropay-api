@@ -21,15 +21,10 @@ return new class extends Migration
             $table->uuid('id')->primary();
 
             // Links to the merchant receiving the money
-            $table->foreignUuid('merchant_id')
-                  ->constrained('merchants')
-                  ->onDelete('cascade');
+            $table->foreignUuid('merchant_id')->constrained('merchants')->onDelete('cascade');
 
             // The customer's user ID (nullable = anonymous payments possible)
-            $table->foreignUuid('customer_id')
-                  ->nullable()
-                  ->constrained('users')
-                  ->onDelete('set null');
+            $table->foreignId('customer_id')->nullable()->constrained('users')->onDelete('set null');
 
             // Amount in the smallest currency unit (centavos/cents).
             // NEVER store money as float — floating point causes rounding errors.
