@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-use App\Interfaces\Services\FraudDetectionInterface;
+use App\Contracts\Services\FraudDetectionInterface;
 use App\Services\FraudDetectionService;
-use App\Interfaces\Repositories\TransactionRepositoryInterface;
+use App\Contracts\Repositories\TransactionRepositoryInterface;
 use App\Repositories\TransactionRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(
-            \App\Interfaces\Repositories\TransactionRepositoryInterface::class,
+            \App\Contracts\Repositories\TransactionRepositoryInterface::class,
             \App\Repositories\TransactionRepository::class
         );
 

@@ -3,7 +3,7 @@
 
 namespace App\Repositories;
 
-use App\Interfaces\Repositories\TransactionRepositoryInterface;
+use App\Contracts\Repositories\TransactionRepositoryInterface;
 use App\Models\Transaction;
 use Illuminate\Support\Collection;
 

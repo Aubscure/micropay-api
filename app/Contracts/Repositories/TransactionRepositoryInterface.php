@@ -1,7 +1,7 @@
 <?php
-// app/Interfaces/Repositories/TransactionRepositoryInterface.php
+// app/Contracts/Repositories/TransactionRepositoryInterface.php
 
-namespace App\Interfaces\Repositories;
+namespace App\Contracts\Repositories;
 
 use App\Models\Transaction;
 use Illuminate\Support\Collection;
