@@ -2,11 +2,18 @@
 
 namespace App\Providers;
 
+use Illuminate\Http\Request;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use App\Interfaces\Services\FraudDetectionInterface;
+use App\Services\FraudDetectionService;
+use App\Interfaces\Repositories\TransactionRepositoryInterface;
+use App\Repositories\TransactionRepository;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +22,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \App\Contracts\Repositories\TransactionRepositoryInterface::class,
+            \App\Repositories\TransactionRepository::class
+        );
+
+        $this->app->bind 
+        (
+            FraudDetectionInterface::class,
+            FraudDetectionService::class
+        );
     }
 
     /**
@@ -24,6 +40,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        RateLimiter::for('transaction-api', function (Request $request) {
+            return [
+                // Strict per-user limit
+                Limit::perMinute(60)->by($request->user()?->id ?? $request->ip()),
+                // Also limit per IP (catches bots before they authenticate)
+                Limit::perMinute(100)->by($request->ip()),
+            ];
+        });
     }
 
     /**
@@ -47,4 +72,6 @@ class AppServiceProvider extends ServiceProvider
             : null,
         );
     }
+
+    
 }
