@@ -32,10 +32,22 @@ class RuleEngine
      */
     private array $config;
 
+// app/Services/FraudDetection/RuleEngine.php
+
     public function __construct(
         private readonly TransactionRepositoryInterface $transactions
     ) {
-        $this->config = config('fraud'); // Load from config/fraud.php
+        // Use hardcoded defaults if config/fraud.php doesn't exist.
+        // config() returns null when the file is missing — (array) cast prevents the TypeError.
+        $this->config = config('fraud') ?? [
+            'velocity' => [
+                'max_per_5_minutes' => 10,
+            ],
+            'amount' => [
+                'large_single_centavos'  => 5000000,  // PHP 50,000
+                'round_amount_threshold' => 1000000,  // PHP 10,000
+            ],
+        ];
     }
 
     /**
