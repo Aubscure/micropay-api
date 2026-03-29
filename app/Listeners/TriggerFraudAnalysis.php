@@ -11,8 +11,7 @@ use App\Jobs\FraudDetectionJob;
  * Implementing ShouldQueue means this listener itself runs asynchronously —
  * the HTTP response is returned to the user before this even starts.
  */
-class TriggerFraudAnalysis implements ShouldQueue
-{
+class TriggerFraudAnalysis{
     /**
      * Handle the event.
      * Dispatches the fraud detection job to the queue.
