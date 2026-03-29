@@ -4,7 +4,6 @@ namespace App\Listeners;
 
 use App\Events\TransactionInitiated;
 use App\Jobs\FraudDetectionJob;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
  * Listens for TransactionInitiated and dispatches the fraud detection job.
@@ -20,10 +19,7 @@ class TriggerFraudAnalysis implements ShouldQueue
      */
     public function handle(TransactionInitiated $event): void
     {
-        // Push the fraud detection job onto the 'fraud' queue.
-        // This runs in the background — the vendor's payment screen
-        // already showed "success" by the time this executes.
-        FraudDetectionJob::dispatch($event->transaction)
-            ->onQueue('fraud');
+        // With sync driver this runs immediately in the same request
+        FraudDetectionJob::dispatch($event->transaction);
     }
 }

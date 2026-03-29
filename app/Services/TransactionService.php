@@ -38,37 +38,33 @@ class TransactionService
      *
      * @throws \Throwable If the database transaction fails
      */
+// app/Services/TransactionService.php
+
     public function initiate(array $validatedData, string $merchantId): Transaction
     {
-        // DB::transaction() wraps everything in a database transaction.
-        // If anything inside throws an exception, ALL changes are rolled back.
-        // This prevents partial writes (e.g., transaction created but status not set).
-        return DB::transaction(function () use ($validatedData, $merchantId) {
-
-            // Merge the merchant ID and set initial status
+        // DB transaction only wraps the write — nothing else
+        $transaction = DB::transaction(function () use ($validatedData, $merchantId) {
             $data = array_merge($validatedData, [
                 'merchant_id'  => $merchantId,
                 'status'       => 'pending',
                 'initiated_at' => now(),
             ]);
 
-            // Create the transaction record
-            $transaction = $this->transactions->create($data);
-
-            // Fire an event. Listeners will handle fraud detection,
-            // logging, notifications — decoupled from this service.
-            // The event is dispatched INSIDE the DB transaction,
-            // so if the event dispatch fails, the record is rolled back.
-            event(new TransactionInitiated($transaction));
-
-            Log::info('Transaction initiated', [
-                'transaction_id' => $transaction->id,
-                'merchant_id'    => $merchantId,
-                'amount'         => $transaction->amount_php,
-            ]);
-
-            return $transaction;
+            return $this->transactions->create($data);
         });
+
+        // Fire event AFTER the DB transaction commits.
+        // With sync queue, the fraud job runs right here — no worker needed.
+        // The transaction record is guaranteed to exist in the DB at this point.
+        event(new TransactionInitiated($transaction));
+
+        Log::info('Transaction initiated', [
+            'transaction_id' => $transaction->id,
+            'merchant_id'    => $merchantId,
+            'amount'         => $transaction->amount_php,
+        ]);
+
+        return $transaction;
     }
 
     /**
