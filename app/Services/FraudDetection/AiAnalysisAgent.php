@@ -62,19 +62,20 @@ class AiAnalysisAgent
         try {
             // Call Groq API — free tier available at console.groq.com
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . config('services.groq.api_key'),
+                'Authorization' => 'Bearer ' . config('groq.api_key'),
                 'Content-Type'  => 'application/json',
             ])
             ->timeout(10) // 10 second timeout — don't hold up the queue
-            ->post('https://api.groq.com/openai/v1/chat/completions', [
-                'model'       => 'llama-3.3-70b-versatile', // Fast, free model
-                'messages'    => [
+            ->post(config('groq.base_url') . '/chat/completions', [
+                // Read model from config instead of hardcoding
+                'model'    => config('groq.default_model'),
+                'messages' => [
                     ['role' => 'system', 'content' => self::SYSTEM_PROMPT],
                     ['role' => 'user',   'content' => $prompt],
                 ],
-                'temperature' => 0.1,   // Low temperature = more consistent, less creative
-                'max_tokens'  => 300,   // Keep responses short (saves quota)
-                'response_format' => ['type' => 'json_object'], // Force JSON output
+                'temperature'     => 0.1,
+                'max_tokens'      => 300,
+                'response_format' => ['type' => 'json_object'],
             ]);
 
             if (!$response->successful()) {

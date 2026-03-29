@@ -19,6 +19,12 @@ class FraudDetectionJob
 
     public function handle(RuleEngine $ruleEngine, AiAnalysisAgent $aiAgent): void
     {
+
+        // Guard: if already processed, skip — prevents double-run
+        if ($this->transaction->status !== 'pending') {
+            Log::info("Skipping fraud check — already processed: {$this->transaction->id}");
+            return;
+        }
         Log::info("Starting fraud check: {$this->transaction->id}");
 
         $this->transaction->update(['status' => 'fraud_check']);
