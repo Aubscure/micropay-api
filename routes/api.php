@@ -43,5 +43,5 @@ Route::middleware(['auth:sanctum', 'throttle:transaction-api'])->group(function 
     Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
 
     // Batch sync endpoint for offline PWA transactions
-    Route::post('/transactions/sync', [TransactionController::class, 'syncOffline'])->name('transactions.sync');
+    Route::post('/transactions/sync', [TransactionController::class, 'syncOffline'])->name('transactions.sync')->middleware('throttle:sync-endpoint');
 });

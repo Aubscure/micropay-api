@@ -74,15 +74,16 @@ class TransactionController extends Controller
     public function syncOffline(Request $request): JsonResponse
     {
         $request->validate([
-            'transactions'         => 'required|array|max:100', // Max 100 at once
-            'transactions.*.id'    => 'required|uuid',
-            'transactions.*.amount_centavos' => 'required|integer|min:1',
+            'transactions'                   => 'required|array|min:1|max:20',
+            'transactions.*.id'              => 'required|uuid',
+            'transactions.*.amount_centavos' => 'required|integer|min:1|max:10000000',
             'transactions.*.currency'        => 'required|string|size:3',
+            'transactions.*.payment_method'  => 'required|string|in:qr_code,nfc,manual_entry',
         ]);
 
         $result = $this->transactionService->syncOfflineBatch(
             transactions: $request->input('transactions'),
-            merchantId: $request->user()->merchant->id
+            merchantId:   $request->user()->merchant->id
         );
 
         return response()->json([
