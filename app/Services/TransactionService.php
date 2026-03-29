@@ -39,33 +39,32 @@ class TransactionService
      * @throws \Throwable If the database transaction fails
      */
 // app/Services/TransactionService.php
-
-    public function initiate(array $validatedData, string $merchantId): Transaction
-    {
-        // DB transaction only wraps the write — nothing else
-        $transaction = DB::transaction(function () use ($validatedData, $merchantId) {
-            $data = array_merge($validatedData, [
-                'merchant_id'  => $merchantId,
-                'status'       => 'pending',
-                'initiated_at' => now(),
-            ]);
-
-            return $this->transactions->create($data);
-        });
-
-        // Fire event AFTER the DB transaction commits.
-        // With sync queue, the fraud job runs right here — no worker needed.
-        // The transaction record is guaranteed to exist in the DB at this point.
-        event(new TransactionInitiated($transaction));
-
-        Log::info('Transaction initiated', [
-            'transaction_id' => $transaction->id,
-            'merchant_id'    => $merchantId,
-            'amount'         => $transaction->amount_php,
+public function initiate(array $validatedData, string $merchantId): Transaction
+{
+    // DB transaction ONLY wraps the write — nothing else
+    $transaction = DB::transaction(function () use ($validatedData, $merchantId) {
+        $data = array_merge($validatedData, [
+            'merchant_id'  => $merchantId,
+            'status'       => 'pending',
+            'initiated_at' => now(),
         ]);
 
-        return $transaction;
-    }
+        return $this->transactions->create($data);
+    });
+
+    // Event fires AFTER commit — DB transaction is fully closed here.
+    // With sync queue, FraudDetectionJob runs right here in this same request.
+    // The transaction record is guaranteed to exist in the DB at this point.
+    event(new TransactionInitiated($transaction));
+
+    Log::info('Transaction initiated', [
+        'transaction_id' => $transaction->id,
+        'merchant_id'    => $merchantId,
+        'amount'         => $transaction->amount_php,
+    ]);
+
+    return $transaction;
+}
 
     /**
      * Handle a batch of offline transactions synced from the PWA.
