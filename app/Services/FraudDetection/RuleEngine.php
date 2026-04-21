@@ -59,6 +59,7 @@ class RuleEngine
      */
     public function analyze(Transaction $transaction): array
     {
+        
         $triggered = [];
 
         // Run each rule. If it returns a result, add it to the list.
@@ -77,6 +78,8 @@ class RuleEngine
                 $triggered[] = $result;
             }
         }
+
+        
 
         return $triggered;
     }
