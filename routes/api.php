@@ -10,21 +10,27 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-| All routes here are automatically prefixed with /api
-| and served via Sanctum token authentication.
+| All routes here are automatically prefixed with /api.
+| Following the security architecture refactor, these routes now securely 
+| support BOTH stateful cookie sessions (for the frontend SPA) and 
+| stateless Bearer tokens (for potential third-party integrations).
 |
 | Route naming: use dot notation (transactions.store)
 | for easy URL generation: route('transactions.store')
 */
 
-// ── Public routes ──────────────────────────
-Route::post('/auth/register', [AuthController::class, 'register'])->name('auth.register');
+// Public routes 
+// SECURITY: Added a rate limiter to registration to prevent malicious mass-account creation.
+Route::post('/auth/register', [AuthController::class, 'register'])
+     ->name('auth.register')
+     ->middleware('throttle:6,1'); // Limit to 6 attempts per minute per IP
 
 Route::post('/auth/login', [AuthController::class, 'login'])
      ->name('auth.login')
-     ->middleware('throttle:login'); // Better to use a named limiter for login too
+     ->middleware('throttle:login'); // Utilizes the named limiter defined in your provider
 
-// ── Protected routes (Sanctum + Custom Limiter) ───────────────────────────
+// Protected routes (Sanctum + Custom Limiter) 
+// The auth:sanctum middleware automatically resolves whether to check for a cookie or a token.
 Route::middleware(['auth:sanctum', 'throttle:transaction-api'])->group(function () {
 
     // Auth
@@ -43,5 +49,7 @@ Route::middleware(['auth:sanctum', 'throttle:transaction-api'])->group(function 
     Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
 
     // Batch sync endpoint for offline PWA transactions
-    Route::post('/transactions/sync', [TransactionController::class, 'syncOffline'])->name('transactions.sync')->middleware('throttle:sync-endpoint');
+    Route::post('/transactions/sync', [TransactionController::class, 'syncOffline'])
+         ->name('transactions.sync')
+         ->middleware('throttle:sync-endpoint');
 });

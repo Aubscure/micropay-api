@@ -17,7 +17,7 @@ return [
 
     'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
         '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
+        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1,localhost:5173,micropay-frontend.vercel.app',
         Sanctum::currentApplicationUrlWithPort(),
         // Sanctum::currentRequestHost(),
     ))),
@@ -75,6 +75,9 @@ return [
     |
     */
 
+    // ARCHITECTURE NOTE: These classes are declared here but are NOT automatically active.
+    // They are executed dynamically by the `EnsureFrontendRequestsAreStateful` 
+    // middleware that we prepended in your `bootstrap/app.php` file.
     'middleware' => [
         'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class,
         'encrypt_cookies' => Illuminate\Cookie\Middleware\EncryptCookies::class,
