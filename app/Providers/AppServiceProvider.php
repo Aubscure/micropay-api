@@ -34,27 +34,27 @@ class AppServiceProvider extends ServiceProvider
         );
     }
 
-    /**
+/**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
         $this->configureDefaults();
 
+
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by($request->email . $request->ip());
+        });
+
         RateLimiter::for('transaction-api', function (Request $request) {
             return [
-                // Strict per-user limit
                 Limit::perMinute(60)->by($request->user()?->id ?? $request->ip()),
-                // Also limit per IP (catches bots before they authenticate)
                 Limit::perMinute(100)->by($request->ip()),
             ];
         });
 
         RateLimiter::for('sync-endpoint', function (Request $request) {
             return [
-                // Max 3 sync requests per minute per user
-                // Prevents the "Denial of Wallet" attack where someone floods
-                // the sync endpoint to trigger thousands of AI API calls
                 Limit::perMinute(3)->by('sync:' . ($request->user()?->id ?? $request->ip())),
             ];
         });
