@@ -15,6 +15,13 @@ Route::post('/auth/login', [AuthController::class, 'login'])
      ->name('auth.login')
      ->middleware('throttle:login'); 
 
+// Cross-domain SPA CSRF bootstrapper.
+// On different top-level domains (vercel.app -> laravel.cloud), the browser may not allow JS
+// to read the XSRF-TOKEN cookie, so the SPA fetches the session-bound CSRF token here.
+Route::get('/auth/csrf', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+})->name('auth.csrf');
+
 // Protected routes (Sanctum + Custom Limiter) 
 Route::middleware(['auth:sanctum', 'throttle:transaction-api'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
