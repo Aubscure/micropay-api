@@ -156,7 +156,9 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    // Treat empty env value as "null" so browsers get host-only cookies.
+    // An empty string domain can lead to cookies being dropped, causing 419s in SPA auth.
+    'domain' => env('SESSION_DOMAIN') ?: null,
 
     /*
     |--------------------------------------------------------------------------
