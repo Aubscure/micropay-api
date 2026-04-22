@@ -40,8 +40,13 @@ class AuthController extends Controller
         $nonce = bin2hex(random_bytes(32));
         $request->session()->put('offline_encryption_nonce', $nonce);
 
+        // Fallback: Issue a Sanctum token for cross-domain clients where session cookies
+        // may not persist reliably (multi-instance free tiers, strict browsers, etc).
+        $token = $user->createToken('spa')->plainTextToken;
+
         return response()->json([
             'message' => 'Registration successful.',
+            'token'   => $token,
             'user'    => [
                 'id'                       => $user->id,
                 'name'                     => $user->name,
@@ -68,12 +73,19 @@ class AuthController extends Controller
             $nonce = bin2hex(random_bytes(32));
             $request->session()->put('offline_encryption_nonce', $nonce);
 
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            // Fallback: issue token so auth survives even if session is not sticky.
+            $token = $user->createToken('spa')->plainTextToken;
+
             return response()->json([
                 'message' => 'Login successful.',
+                'token'   => $token,
                 'user'    => [
-                    'id'                       => Auth::user()->id,
-                    'name'                     => Auth::user()->name,
-                    'email'                    => Auth::user()->email,
+                    'id'                       => $user->id,
+                    'name'                     => $user->name,
+                    'email'                    => $user->email,
                     'offline_encryption_nonce' => $nonce,
                 ],
             ]);
@@ -89,6 +101,9 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
+        // If a Sanctum token was used, revoke it.
+        $request->user()?->currentAccessToken()?->delete();
+
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
