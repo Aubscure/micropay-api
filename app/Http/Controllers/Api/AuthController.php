@@ -4,6 +4,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Merchant;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,6 +32,14 @@ class AuthController extends Controller
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'password' => $validated['password'],
+        ]);
+
+        // Create the required merchant profile for new accounts so transaction endpoints
+        // (which authorize on merchant presence) work immediately after signup.
+        Merchant::create([
+            'user_id'        => $user->id,
+            'business_name'  => "{$user->name} Store",
+            'business_type'  => null,
         ]);
 
         Auth::login($user);
