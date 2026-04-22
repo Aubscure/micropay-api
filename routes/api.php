@@ -15,11 +15,6 @@ Route::post('/auth/login', [AuthController::class, 'login'])
      ->name('auth.login')
      ->middleware('throttle:login'); 
 
-// SECURITY FIX: Endpoint to allow cross-domain SPAs to read the CSRF token
-Route::get('/auth/csrf', function () {
-    return response()->json(['csrf_token' => csrf_token()]);
-});
-
 // Protected routes (Sanctum + Custom Limiter) 
 Route::middleware(['auth:sanctum', 'throttle:transaction-api'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
