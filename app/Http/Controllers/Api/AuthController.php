@@ -78,10 +78,12 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            $nonce = $this->offlineNonceFor($user);
+
 
             /** @var \App\Models\User $user */
             $user = Auth::user();
+
+            $nonce = $this->offlineNonceFor($user);
 
             // Fallback: issue token so auth survives even if session is not sticky.
             $token = $user->createToken('spa')->plainTextToken;
