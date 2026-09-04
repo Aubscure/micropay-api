@@ -45,9 +45,9 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        // SECURITY: Generate a secure nonce tied strictly to this active session.
-        $nonce = bin2hex(random_bytes(32));
-        $request->session()->put('offline_encryption_nonce', $nonce);
+        // Deterministic per-user nonce. Same value every time this user
+        // authenticates, so offline-queued data always stays decryptable.
+        $nonce = $this->offlineNonceFor($user);
 
         // Fallback: Issue a Sanctum token for cross-domain clients where session cookies
         // may not persist reliably (multi-instance free tiers, strict browsers, etc).
@@ -78,9 +78,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // SECURITY: Generate a fresh nonce on every new login.
-            $nonce = bin2hex(random_bytes(32));
-            $request->session()->put('offline_encryption_nonce', $nonce);
+            $nonce = $this->offlineNonceFor($user);
 
             /** @var \App\Models\User $user */
             $user = Auth::user();
@@ -134,8 +132,13 @@ class AuthController extends Controller
                 'email'                    => $request->user()->email,
                 'created_at'               => $request->user()->created_at,
                 // Pass the nonce to the frontend to be held strictly in active memory
-                'offline_encryption_nonce' => $request->session()->get('offline_encryption_nonce'),
+                'offline_encryption_nonce' => $this->offlineNonceFor($request->user()),
             ],
         ]);
     }
+    private function offlineNonceFor(User $user): string
+    {
+        return hash_hmac('sha256', $user->id, config('app.key'));
+    }
 }
+
